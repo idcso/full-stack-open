@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import personService from './services/persons'
+import stylesService from './services/Styles'
 import Filter from './components/Filter'
 import PersonForm from './components/PersonForm'
 import Persons from './components/Persons'
+import Notification from './components/Notification'
 import { useEffect } from 'react'
 
 const App = () => {
@@ -10,6 +12,8 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [newFilter, setNewFilter] = useState('')
+  const [notification, setNotification] = useState('')
+  const [styles, setStyles] = useState('')
 
   const handleNameChange = event => setNewName(event.target.value)
   const handleNumberChange = event => setNewNumber(event.target.value)
@@ -23,6 +27,11 @@ const App = () => {
 
   useEffect(hook, [])
 
+  const showNotification = (textMessage) => {
+    setNotification(textMessage)
+    setTimeout(() => setNotification(''), 5000)
+  }
+
   const updateNumber = (person) => {
     if (
       window.confirm(`${person.name} is already added to phonebook, replace the old number?`)
@@ -31,6 +40,14 @@ const App = () => {
       personService.updatePerson(person, changedPerson)
         .then(returnedPerson => {
           setPersons(persons.map(p => p.id !== person.id ? p : returnedPerson))
+          setNewName('')
+          setNewNumber('')
+          setStyles(stylesService.success)
+          showNotification(`Added ${returnedPerson.name}`)
+        })
+        .catch(() => {
+          setStyles(stylesService.error)
+          showNotification(`Information of ${changedPerson.name} has already been removed from server`)
         })
     }
   }
@@ -53,6 +70,8 @@ const App = () => {
         setPersons(persons.concat(returnedPerson))
         setNewName('')
         setNewNumber('')
+        setStyles(stylesService.success)
+        showNotification(`Added ${returnedPerson.name}`)
       })
   }
 
@@ -67,6 +86,8 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+
+      <Notification message={notification} styles={styles} />
 
       <Filter newFilter={newFilter} handleFilterChange={handleFilterChange} />
 
